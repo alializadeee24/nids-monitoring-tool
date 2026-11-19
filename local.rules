@@ -1,0 +1,15 @@
+# Suricata custom rules - CodeAlpha Task 4  (sid 1000001+)
+# Replace $HOME_NET in suricata.yaml, e.g. [192.168.0.0/16]
+
+alert icmp any any -> $HOME_NET any (msg:"CA ICMP ping sweep/flood"; itype:8; threshold:type threshold, track by_src, count 20, seconds 5; classtype:attempted-recon; sid:1000001; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"CA TCP SYN port scan"; flags:S,12; threshold:type both, track by_src, count 25, seconds 10; classtype:attempted-recon; sid:1000002; rev:1;)
+alert tcp any any -> $HOME_NET 22 (msg:"CA SSH brute force"; flow:to_server; flags:S; threshold:type both, track by_src, count 5, seconds 60; classtype:attempted-admin; sid:1000003; rev:1;)
+alert tcp any any -> $HOME_NET 21 (msg:"CA FTP brute force"; flow:to_server; flags:S; threshold:type both, track by_src, count 5, seconds 60; classtype:attempted-admin; sid:1000004; rev:1;)
+alert http any any -> $HOME_NET any (msg:"CA SQL injection attempt"; flow:established,to_server; http.uri; content:"union"; nocase; content:"select"; nocase; distance:0; classtype:web-application-attack; sid:1000005; rev:1;)
+alert http any any -> $HOME_NET any (msg:"CA SQLi tautology"; flow:established,to_server; http.uri; pcre:"/('|%27)\s*(or|and)\s*('|%27)?\d*('|%27)?\s*=\s*('|%27)?\d*/i"; classtype:web-application-attack; sid:1000006; rev:1;)
+alert http any any -> $HOME_NET any (msg:"CA XSS attempt"; flow:established,to_server; http.uri; content:"<script"; nocase; classtype:web-application-attack; sid:1000007; rev:1;)
+alert http any any -> $HOME_NET any (msg:"CA Directory traversal"; flow:established,to_server; http.uri; content:"../"; classtype:web-application-attack; sid:1000008; rev:1;)
+alert http any any -> $HOME_NET any (msg:"CA Scanner user-agent (sqlmap/nikto/nmap)"; flow:established,to_server; http.user_agent; pcre:"/(sqlmap|nikto|nmap|masscan|dirbuster)/i"; classtype:web-application-attack; sid:1000009; rev:1;)
+alert dns any any -> any any (msg:"CA Suspicious long DNS query (tunnelling?)"; dns.query; content:"."; pcre:"/^[a-z0-9]{40,}\./i"; classtype:bad-unknown; sid:1000010; rev:1;)
+alert tcp $HOME_NET any -> any 4444 (msg:"CA Possible reverse shell port 4444"; flow:to_server,established; classtype:trojan-activity; sid:1000011; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"CA Telnet cleartext connection"; flow:to_server; flags:S; classtype:policy-violation; sid:1000012; rev:1;)
